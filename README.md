@@ -127,6 +127,14 @@ Daftar semua sumber eksternal yang dipakai ada di [`docs/sumber-eksternal.md`](d
 - Masih contoh: kampanye, analisis foto, akun demo, dan persetujuan rute di Command Center (belum tersimpan)
 - Belum ada: basis data, autentikasi sungguhan, dan penyimpanan laporan, yang dikerjakan tim backend
 
+## Tim
+
+| Peran | Nama | GitHub |
+| --- | --- | --- |
+| Frontend | Ibal | |
+| Backend | | |
+| Backend | | |
+
 ## Dokumentasi fitur
 
 Penjelasan tiap menu ada di folder [`docs/`](docs/README.md): Peta, Laporan, Mangrove, Kampanye, Command Center, dan Judge Mode.
