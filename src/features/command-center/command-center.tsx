@@ -19,7 +19,8 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 export function CommandCenter() {
-  const { snapshot } = useAppState();
+  const { snapshot, routeDecisions, decideRoute, user } = useAppState();
+  const canDecide = user?.role === "bpbd_admin";
   const queue = snapshot.reports
     .filter((r) => r.status === "needs_review" || r.status === "submitted")
     .sort((a, b) => {
@@ -94,14 +95,38 @@ export function CommandCenter() {
                   {r.distanceKm} km, {r.durationMin} menit, {r.affectedSegments} ruas terdampak
                 </p>
                 <p className="mt-2 text-sm text-ink-soft">{r.rationale}</p>
-                <div className="mt-3 flex gap-2">
-                  <button className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-deep">
-                    Setujui untuk wilayah
-                  </button>
-                  <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold hover:bg-canvas">
-                    Tolak
-                  </button>
-                </div>
+                {routeDecisions[r.id] ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-2">
+                    <Pill tone={routeDecisions[r.id] === "approved" ? "ok" : "danger"}>
+                      {routeDecisions[r.id] === "approved" ? "Disetujui petugas" : "Ditolak petugas"}
+                    </Pill>
+                    {canDecide && (
+                      <button
+                        onClick={() => decideRoute(r.id, null)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold text-ink-soft hover:bg-canvas"
+                      >
+                        Batalkan keputusan
+                      </button>
+                    )}
+                  </div>
+                ) : canDecide ? (
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      onClick={() => decideRoute(r.id, "approved")}
+                      className="rounded-lg bg-teal px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-deep"
+                    >
+                      Setujui untuk wilayah
+                    </button>
+                    <button
+                      onClick={() => decideRoute(r.id, "rejected")}
+                      className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold hover:bg-canvas"
+                    >
+                      Tolak
+                    </button>
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-muted">Menunggu keputusan petugas</p>
+                )}
               </li>
             ))}
           </ul>

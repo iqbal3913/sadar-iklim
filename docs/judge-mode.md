@@ -39,7 +39,7 @@ Galeri lima foto simulasi untuk menguji pembuatan laporan dan audit mangrove tan
 
 ## Reset demo
 
-Tombol **Reset demo** (juga ada di bar status saat mode Simulasi) menghapus laporan dan keputusan petugas yang dibuat selama pengujian, lalu mengembalikan mode ke Live. Pilihan wilayah BMKG tidak ikut direset.
+Tombol **Reset demo** (juga ada di bar status saat mode Simulasi) menghapus laporan, audit mangrove, dan keputusan petugas (verifikasi dan persetujuan rute) yang dibuat selama pengujian, mengembalikan laporan dan audit bawaan yang sempat dihapus, lalu mengembalikan mode ke Live. Pilihan wilayah BMKG tidak ikut direset.
 
 ## Akun demo
 

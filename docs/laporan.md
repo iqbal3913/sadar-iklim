@@ -86,6 +86,16 @@ Panel **Keputusan petugas** hanya tampil bagi petugas BPBD. Pengguna lain meliha
 
 - Petugas memilih **Verifikasi**, **Tolak**, atau **Duplikat**.
 - Kolom **Alasan** wajib diisi minimal 5 karakter, dan perubahan status dicatat dalam jejak audit.
+- Laporan yang sudah diputuskan dapat dikembalikan ke antrean lewat **Kembalikan ke antrean** (alasan tetap wajib), misalnya jika ada bukti baru.
+
+### Menghapus atau menarik laporan
+
+| Siapa | Tombol | Berlaku untuk |
+| --- | --- | --- |
+| Petugas BPBD | **Hapus laporan** | Semua laporan, mis. laporan palsu, ganda, atau salah kirim |
+| Warga | **Tarik laporan** | Hanya laporan miliknya yang belum diverifikasi |
+
+Tombol meminta konfirmasi lebih dulu ("Ya, hapus" atau "Ya, tarik", ada tombol **Batal**). Setelah dihapus, laporan hilang dari daftar, peta, dan antrean verifikasi, lalu tampilan kembali ke daftar laporan. Tombol **Reset demo** di Judge Mode mengembalikan semua laporan yang dihapus.
 
 ## Keamanan dan privasi
 
@@ -97,16 +107,17 @@ Panel **Keputusan petugas** hanya tampil bagi petugas BPBD. Pengguna lain meliha
 
 | Bagian | Status |
 | --- | --- |
-| Formulir, daftar, detail, keputusan petugas | Berfungsi di browser |
+| Formulir, daftar, detail, keputusan petugas, hapus dan tarik laporan | Berfungsi di browser |
 | Penyimpanan | `localStorage` browser, belum ada database |
 | Analisis foto | Tiruan: hasil tetap setelah jeda sekitar 1,4 detik (`src/features/vision-triage/analyze.ts`) |
 | Foto contoh | Lima gambar SVG di `public/demo/` untuk uji tanpa file pribadi |
 
 ## Titik sambung backend
 
-1. Ganti `addReport` dan `reviewReport` di `src/lib/app-state.tsx` dengan pemanggilan Supabase (tabel laporan dan peninjauan, Storage untuk foto).
+1. Ganti `addReport`, `reviewReport`, dan `removeItem` di `src/lib/app-state.tsx` dengan pemanggilan Supabase (tabel laporan dan peninjauan, Storage untuk foto).
 2. Ganti `analyze.ts` dengan route server yang memanggil model visi. Kunci API disimpan di `.env.local`.
-3. Simpan pelaku dan waktu setiap keputusan agar jejak audit utuh.
+3. Simpan pelaku dan waktu setiap keputusan agar jejak audit utuh. Penghapusan sebaiknya berupa penghapusan lunak (kolom `deleted_at` dan `deleted_by`) supaya masih bisa ditelusuri.
+4. Terapkan aturan di server: hanya petugas yang boleh menghapus laporan siapa pun, dan pelapor hanya boleh menarik laporannya sendiri yang belum diverifikasi.
 
 Rinciannya ada di [backend.md](backend.md).
 

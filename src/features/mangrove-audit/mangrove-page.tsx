@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { listMangroveAudits, listSamplePhotos } from "@/lib/data";
+import { CheckCircle2, Plus, XCircle } from "lucide-react";
+import { useAppState } from "@/lib/app-state";
+import { listSamplePhotos } from "@/lib/data";
 import { conditionLabel, formatDate, survivalRate } from "@/lib/format";
 import type { MangroveAudit } from "@/lib/types";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Button, Field, Notice, Panel, Pill, inputCls } from "@/components/ui";
 
 const erosionLabel = { low: "Rendah", moderate: "Sedang", high: "Tinggi", unknown: "Belum diketahui" } as const;
@@ -19,7 +21,19 @@ const stressLabel: Record<string, string> = {
   unclear: "Tidak jelas",
 };
 
-function AuditCard({ audit }: { audit: MangroveAudit }) {
+function AuditCard({
+  audit,
+  canReview,
+  canRemove,
+  onReview,
+  onRemove,
+}: {
+  audit: MangroveAudit;
+  canReview: boolean;
+  canRemove: boolean;
+  onReview: (verification: MangroveAudit["verification"]) => void;
+  onRemove: () => void;
+}) {
   const rate = survivalRate(audit.plantedCount, audit.survivingCount);
   return (
     <li className="overflow-hidden rounded-xl border border-line bg-surface">
@@ -68,13 +82,37 @@ function AuditCard({ audit }: { audit: MangroveAudit }) {
             ))}
           </ul>
         </div>
+
+        {(canReview || canRemove) && (
+          <div className="flex flex-wrap gap-2 border-t border-line pt-3">
+            {canReview && audit.verification !== "verified" && (
+              <Button onClick={() => onReview("verified")}>
+                <CheckCircle2 className="size-4" aria-hidden /> Verifikasi
+              </Button>
+            )}
+            {canReview && audit.verification !== "rejected" && (
+              <Button variant="secondary" onClick={() => onReview("rejected")}>
+                <XCircle className="size-4" aria-hidden /> Tolak
+              </Button>
+            )}
+            {canRemove && (
+              <ConfirmButton
+                label="Hapus audit"
+                question="Hapus audit ini secara permanen?"
+                confirmLabel="Ya, hapus"
+                onConfirm={onRemove}
+              />
+            )}
+          </div>
+        )}
       </div>
     </li>
   );
 }
 
 export function MangrovePage() {
-  const [audits, setAudits] = useState<MangroveAudit[]>(listMangroveAudits());
+  const { audits, addedAudits, addAudit, reviewAudit, removeItem, user } = useAppState();
+  const isOfficer = user?.role === "bpbd_admin";
   const [open, setOpen] = useState(false);
   const mangroveSamples = listSamplePhotos().filter((s) => s.kind === "mangrove_audit");
 
@@ -98,25 +136,22 @@ export function MangrovePage() {
     if (survivingN !== null && plantedN !== null && survivingN > plantedN) return setError("Jumlah hidup tidak boleh melebihi jumlah ditanam");
     setError(null);
     const s = mangroveSamples[sampleIdx];
-    setAudits((prev) => [
-      {
-        id: `m-${Date.now()}`,
-        plotCode: plotCode.trim(),
-        plotName: plotName.trim(),
-        observedAt: new Date().toISOString(),
-        position: [-3.84, 102.31],
-        plantedCount: plantedN,
-        survivingCount: survivingN,
-        verification: "pending",
-        erosionRisk: s.id === "sample-mangrove-stressed" ? "moderate" : "low",
-        condition: s.id === "sample-mangrove-stressed" ? "needs_attention" : "healthy_appearing",
-        visibleSeedlings: s.id === "sample-mangrove-stressed" ? 12 : 18,
-        stressSigns: s.id === "sample-mangrove-stressed" ? ["yellowing_leaves", "exposed_roots"] : ["none_obvious"],
-        limitations: s.result.limitations,
-        photo: s.src,
-      },
-      ...prev,
-    ]);
+    addAudit({
+      id: `m-${Date.now()}`,
+      plotCode: plotCode.trim(),
+      plotName: plotName.trim(),
+      observedAt: new Date().toISOString(),
+      position: [-3.84, 102.31],
+      plantedCount: plantedN,
+      survivingCount: survivingN,
+      verification: "pending",
+      erosionRisk: s.id === "sample-mangrove-stressed" ? "moderate" : "low",
+      condition: s.id === "sample-mangrove-stressed" ? "needs_attention" : "healthy_appearing",
+      visibleSeedlings: s.id === "sample-mangrove-stressed" ? 12 : 18,
+      stressSigns: s.id === "sample-mangrove-stressed" ? ["yellowing_leaves", "exposed_roots"] : ["none_obvious"],
+      limitations: s.result.limitations,
+      photo: s.src,
+    });
     setOpen(false);
     setPlotCode("");
     setPlotName("");
@@ -193,7 +228,14 @@ export function MangrovePage() {
 
       <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {audits.map((a) => (
-          <AuditCard key={a.id} audit={a} />
+          <AuditCard
+            key={a.id}
+            audit={a}
+            canReview={isOfficer}
+            canRemove={isOfficer || addedAudits.some((x) => x.id === a.id)}
+            onReview={(v) => reviewAudit(a.id, v)}
+            onRemove={() => removeItem(a.id)}
+          />
         ))}
       </ul>
     </div>

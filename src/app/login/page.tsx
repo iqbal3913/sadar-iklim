@@ -32,7 +32,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
+    <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2 md:pt-10">
       <h1 className="sr-only">Masuk ke SadarIklim</h1>
       <Panel title="Masuk">
         {user ? (

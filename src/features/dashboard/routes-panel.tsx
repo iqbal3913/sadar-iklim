@@ -1,3 +1,6 @@
+"use client";
+
+import { useAppState } from "@/lib/app-state";
 import type { Snapshot } from "@/lib/data";
 import type { RoadStatus } from "@/lib/types";
 import { roadStatusLabel } from "@/lib/format";
@@ -17,6 +20,7 @@ const segmentColor: Record<RoadStatus, string> = {
 };
 
 export function RoutesPanel({ snapshot }: { snapshot: Snapshot }) {
+  const { routeDecisions } = useAppState();
   if (snapshot.routes.length === 0) return null;
   return (
     <Panel title="Rute evakuasi kandidat">
@@ -29,6 +33,11 @@ export function RoutesPanel({ snapshot }: { snapshot: Snapshot }) {
                 {decisionLabel[r.decision]}
               </span>
             </div>
+            {routeDecisions[r.id] && (
+              <p className={cx("mt-0.5 text-xs font-semibold", routeDecisions[r.id] === "approved" ? "text-live" : "text-danger")}>
+                {routeDecisions[r.id] === "approved" ? "Disetujui petugas" : "Ditolak petugas"}
+              </p>
+            )}
             <p className="mt-0.5 text-xs tabular-nums text-muted">
               {r.distanceKm} km · {r.durationMin} menit · {r.affectedSegments} ruas terdampak
             </p>

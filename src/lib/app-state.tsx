@@ -1,10 +1,19 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { DemoUser, Report, ReportStatus } from "./types";
-import { emptyLiveData, getLiveSnapshot, getScenarioSnapshot, mergeLive, type LiveData, type Snapshot } from "./data";
+import type { DemoUser, MangroveAudit, Report, ReportStatus } from "./types";
+import {
+  emptyLiveData,
+  getLiveSnapshot,
+  getScenarioSnapshot,
+  listMangroveAudits,
+  mergeLive,
+  type LiveData,
+  type Snapshot,
+} from "./data";
 
 type Mode = "LIVE" | "SIMULATION";
+type RouteDecision = "approved" | "rejected";
 
 interface Persisted {
   mode: Mode;
@@ -13,6 +22,10 @@ interface Persisted {
   user: DemoUser | null;
   addedReports: Report[];
   overrides: Record<string, { status: ReportStatus; reviewNote: string }>;
+  addedAudits: MangroveAudit[];
+  auditReviews: Record<string, MangroveAudit["verification"]>;
+  routeDecisions: Record<string, RouteDecision>;
+  removed: string[];
 }
 
 const defaults: Persisted = {
@@ -22,6 +35,10 @@ const defaults: Persisted = {
   user: null,
   addedReports: [],
   overrides: {},
+  addedAudits: [],
+  auditReviews: {},
+  routeDecisions: {},
+  removed: [],
 };
 
 const storageKey = "sadariklim-demo-state";
@@ -29,6 +46,7 @@ const storageKey = "sadariklim-demo-state";
 interface AppState extends Persisted {
   ready: boolean;
   snapshot: Snapshot;
+  audits: MangroveAudit[];
   setMode: (mode: Mode) => void;
   setScenario: (code: string) => void;
   setAdm4: (adm4: string | null) => void;
@@ -36,6 +54,10 @@ interface AppState extends Persisted {
   logout: () => void;
   addReport: (report: Report) => void;
   reviewReport: (id: string, status: ReportStatus, note: string) => void;
+  removeItem: (id: string) => void;
+  addAudit: (audit: MangroveAudit) => void;
+  reviewAudit: (id: string, verification: MangroveAudit["verification"]) => void;
+  decideRoute: (id: string, decision: RouteDecision | null) => void;
   resetDemo: () => void;
 }
 
@@ -130,8 +152,47 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setState((s) => ({ ...s, overrides: { ...s.overrides, [id]: { status, reviewNote } } })),
     [],
   );
+  const removeItem = useCallback(
+    (id: string) =>
+      setState((s) => ({
+        ...s,
+        addedReports: s.addedReports.filter((r) => r.id !== id),
+        addedAudits: s.addedAudits.filter((a) => a.id !== id),
+        removed: s.removed.includes(id) ? s.removed : [...s.removed, id],
+      })),
+    [],
+  );
+  const addAudit = useCallback(
+    (audit: MangroveAudit) => setState((s) => ({ ...s, addedAudits: [audit, ...s.addedAudits] })),
+    [],
+  );
+  const reviewAudit = useCallback(
+    (id: string, verification: MangroveAudit["verification"]) =>
+      setState((s) => ({ ...s, auditReviews: { ...s.auditReviews, [id]: verification } })),
+    [],
+  );
+  const decideRoute = useCallback(
+    (id: string, decision: RouteDecision | null) =>
+      setState((s) => {
+        const next = { ...s.routeDecisions };
+        if (decision) next[id] = decision;
+        else delete next[id];
+        return { ...s, routeDecisions: next };
+      }),
+    [],
+  );
   const resetDemo = useCallback(
-    () => setState((s) => ({ ...s, addedReports: [], overrides: {}, mode: "LIVE" })),
+    () =>
+      setState((s) => ({
+        ...s,
+        addedReports: [],
+        overrides: {},
+        addedAudits: [],
+        auditReviews: {},
+        routeDecisions: {},
+        removed: [],
+        mode: "LIVE",
+      })),
     [],
   );
 
@@ -140,18 +201,29 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       state.mode === "LIVE" ? mergeLive(getLiveSnapshot(), live) : getScenarioSnapshot(state.scenarioCode);
     const modeKey = state.mode === "LIVE" ? "live" : "simulation";
     const added = state.addedReports.filter((r) => r.dataMode === modeKey);
-    const reports = [...added, ...base.reports].map((r) => {
-      const o = state.overrides[r.id];
-      return o ? { ...r, status: o.status, reviewNote: o.reviewNote } : r;
-    });
+    const reports = [...added, ...base.reports]
+      .filter((r) => !state.removed.includes(r.id))
+      .map((r) => {
+        const o = state.overrides[r.id];
+        return o ? { ...r, status: o.status, reviewNote: o.reviewNote } : r;
+      });
     return { ...base, reports };
   }, [state, live]);
+
+  const audits = useMemo<MangroveAudit[]>(
+    () =>
+      [...state.addedAudits, ...listMangroveAudits()]
+        .filter((a) => !state.removed.includes(a.id))
+        .map((a) => ({ ...a, verification: state.auditReviews[a.id] ?? a.verification })),
+    [state],
+  );
 
   const value = useMemo<AppState>(
     () => ({
       ...state,
       ready,
       snapshot,
+      audits,
       setMode,
       setScenario,
       setAdm4,
@@ -159,9 +231,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       logout,
       addReport,
       reviewReport,
+      removeItem,
+      addAudit,
+      reviewAudit,
+      decideRoute,
       resetDemo,
     }),
-    [state, ready, snapshot, setMode, setScenario, setAdm4, login, logout, addReport, reviewReport, resetDemo],
+    [
+      state,
+      ready,
+      snapshot,
+      audits,
+      setMode,
+      setScenario,
+      setAdm4,
+      login,
+      logout,
+      addReport,
+      reviewReport,
+      removeItem,
+      addAudit,
+      reviewAudit,
+      decideRoute,
+      resetDemo,
+    ],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

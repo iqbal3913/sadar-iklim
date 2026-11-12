@@ -13,13 +13,13 @@ const impactTheme: Record<ImpactLevel, { text: string; dot: string; soft: string
 
 function Stat({ label, value, Icon }: { label: string; value: string; Icon: LucideIcon }) {
   return (
-    <div className="flex min-w-0 items-center gap-3 rounded-xl bg-surface/80 px-4 py-3 ring-1 ring-line">
+    <div className="flex min-w-0 items-center gap-3 rounded-xl bg-surface/80 px-3 py-3 ring-1 ring-line sm:px-4">
       <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-teal-soft text-teal">
         <Icon className="size-[18px]" aria-hidden />
       </span>
       <div className="min-w-0">
         <p className="text-lg font-semibold leading-tight tabular-nums text-ink">{value}</p>
-        <p className="truncate text-xs text-muted">{label}</p>
+        <p className="text-xs leading-snug text-muted">{label}</p>
       </div>
     </div>
   );
@@ -88,13 +88,13 @@ export function SummaryStrip({ snapshot }: { snapshot: Snapshot }) {
         <h1 className="mt-3 max-w-3xl text-2xl font-bold leading-tight text-ink sm:text-[1.75rem]">{headline}</h1>
         <p className="mt-2 flex flex-wrap items-start gap-x-1.5 text-sm text-muted [&>svg]:mt-1">
           <MapPin className="size-3.5 shrink-0" aria-hidden />
-          <span>
+          <span className="min-w-0 flex-1 sm:flex-none">
             {region ? `${region.village}, ${region.city}, ${region.province}` : `${b.village}, ${b.district}, ${b.province}`}
           </span>
           {expires && (
             <>
-              <span aria-hidden>·</span>
-              sampai {formatDateTime(expires)}
+              <span aria-hidden className="hidden sm:inline">·</span>
+              <span className="max-sm:basis-full max-sm:pl-5">sampai {formatDateTime(expires)}</span>
             </>
           )}
         </p>

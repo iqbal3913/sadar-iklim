@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Copy, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, Undo2, XCircle } from "lucide-react";
 import { useAppState } from "@/lib/app-state";
 import { formatDateTime, statusLabel, urgencyLabel } from "@/lib/format";
 import { VisionResultCard } from "@/features/vision-triage/vision-result-card";
+import { ConfirmButton } from "@/components/confirm-button";
 import { Button, EmptyState, Field, Pill, Panel, inputCls } from "@/components/ui";
 
 const statusTone = {
@@ -17,7 +19,8 @@ const statusTone = {
 } as const;
 
 export function ReportDetail({ id }: { id: string }) {
-  const { snapshot, user, reviewReport, ready } = useAppState();
+  const { snapshot, user, reviewReport, removeItem, ready } = useAppState();
+  const router = useRouter();
   const [note, setNote] = useState("");
   const [noteError, setNoteError] = useState<string | null>(null);
 
@@ -36,8 +39,16 @@ export function ReportDetail({ id }: { id: string }) {
   }
 
   const canReview = user?.role === "bpbd_admin";
+  const pending = report.status === "needs_review" || report.status === "submitted";
+  const isOwn = report.reporterMasked === "Anda";
+  const canRemove = canReview || (isOwn && pending);
 
-  const act = (status: "verified" | "rejected" | "duplicate") => {
+  const remove = () => {
+    removeItem(report.id);
+    router.push("/reports");
+  };
+
+  const act = (status: "verified" | "rejected" | "duplicate" | "needs_review") => {
     if (note.trim().length < 5) {
       setNoteError("Alasan wajib diisi, minimal 5 karakter");
       return;
@@ -119,12 +130,33 @@ export function ReportDetail({ id }: { id: string }) {
                 <Button variant="secondary" onClick={() => act("duplicate")}>
                   <Copy className="size-4" aria-hidden /> Duplikat
                 </Button>
+                {!pending && (
+                  <Button variant="ghost" onClick={() => act("needs_review")}>
+                    <Undo2 className="size-4" aria-hidden /> Kembalikan ke antrean
+                  </Button>
+                )}
               </div>
             </Panel>
           ) : (
             <p className="rounded-lg bg-canvas p-3 text-sm text-muted">
               Verifikasi hanya dapat dilakukan oleh petugas BPBD
             </p>
+          )}
+
+          {canRemove && (
+            <Panel title={canReview ? "Hapus laporan" : "Tarik laporan"}>
+              <p className="mb-3 text-sm text-ink-soft">
+                {canReview
+                  ? "Laporan dihapus dari daftar, peta, dan antrean verifikasi. Gunakan untuk laporan palsu, ganda, atau salah kirim"
+                  : "Laporan yang belum diverifikasi dapat ditarik. Setelah ditarik, laporan hilang dari daftar dan peta"}
+              </p>
+              <ConfirmButton
+                label={canReview ? "Hapus laporan" : "Tarik laporan"}
+                question={canReview ? "Hapus laporan ini secara permanen?" : "Tarik laporan ini?"}
+                confirmLabel={canReview ? "Ya, hapus" : "Ya, tarik"}
+                onConfirm={remove}
+              />
+            </Panel>
           )}
         </div>
       </div>

@@ -132,7 +132,7 @@ export function Field({
   children: ReactNode;
 }) {
   return (
-    <label className="block space-y-1.5">
+    <label className="grid content-start gap-2">
       <span className="text-sm font-medium text-ink">{label}</span>
       {children}
       {hint && <span className="block text-xs text-muted">{hint}</span>}

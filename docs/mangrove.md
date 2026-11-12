@@ -30,7 +30,17 @@ survival rate = bibit hidup (hitungan lapangan) / bibit ditanam
 3. Isi **Kode plot**, **Nama plot**, **Bibit ditanam** (pembagi survival rate), dan **Bibit hidup** (hitungan lapangan).
 4. Unggah foto atau pilih foto contoh.
 5. Perhatikan pratinjau survival rate yang dihitung otomatis. Catatan di formulir menegaskan bahwa nilai ini tidak berasal dari foto.
-6. Tekan **Simpan audit**. Kartu audit muncul di daftar.
+6. Tekan **Simpan audit**. Kartu audit muncul di daftar dan tetap ada setelah halaman dimuat ulang.
+
+### Verifikasi dan penghapusan
+
+| Siapa | Tombol | Berlaku untuk |
+| --- | --- | --- |
+| Petugas BPBD | **Verifikasi** dan **Tolak** | Semua audit, status dapat diubah kembali |
+| Petugas BPBD | **Hapus audit** | Semua audit |
+| Warga | **Hapus audit** | Hanya audit yang ia buat sendiri |
+
+Penghapusan meminta konfirmasi lebih dulu. Tombol **Reset demo** di Judge Mode mengembalikan audit bawaan yang dihapus dan menghapus audit buatan pengguna.
 
 ## Isi kartu audit
 
@@ -54,15 +64,15 @@ Kode dan nama plot, waktu pengamatan, lokasi, bibit ditanam, bibit hidup, jumlah
 | Bagian | Status |
 | --- | --- |
 | Formulir, kartu, perhitungan | Berfungsi |
-| Penyimpanan | Browser, belum ada database |
+| Penyimpanan | Browser (`localStorage`), belum ada database |
 | Taksiran kondisi dari foto | Tiruan |
-| Proses verifikasi audit | Belum ada alur peninjauan |
+| Verifikasi dan penghapusan audit | Berfungsi di browser |
 
 ## Titik sambung backend
 
 - Simpan audit ke tabel khusus dan foto ke Storage.
 - Panggil model visi untuk taksiran kondisi, tanpa menghitung jumlah bibit hidup dari foto.
-- Tambahkan alur verifikasi oleh petugas agar status "terverifikasi" bermakna.
+- Simpan keputusan verifikasi beserta petugas dan waktunya agar status "terverifikasi" bermakna, dan batasi penghapusan di sisi server.
 
 ## Pertanyaan umum
 

@@ -52,8 +52,9 @@ Setiap rute menampilkan:
 | Jarak, durasi, ruas terdampak | Ringkasan rute |
 | Alasan | Mengapa rute disarankan atau perlu waspada |
 | Tombol | **Setujui untuk wilayah** dan **Tolak** |
+| Hasil keputusan | Lencana **Disetujui petugas** atau **Ditolak petugas**, dengan tombol **Batalkan keputusan** untuk mengubahnya |
 
-Sistem hanya mengusulkan. Rute tidak berlaku sebelum petugas menyetujuinya.
+Sistem hanya mengusulkan. Rute tidak berlaku sebelum petugas menyetujuinya. Tombol keputusan hanya tampil bagi petugas, dan keputusan juga tampil sebagai label pada panel rute di halaman Peta. Keputusan tetap tersimpan setelah halaman dimuat ulang.
 
 ## Prinsip
 
@@ -64,12 +65,12 @@ Penutupan jalan, rute evakuasi, dan perintah evakuasi adalah keputusan manusia d
 | Bagian | Status |
 | --- | --- |
 | Angka kunci, peta, antrean, keputusan verifikasi | Berfungsi di browser |
-| Persetujuan rute | Baru tampilan, tombol belum menyimpan keputusan |
+| Persetujuan rute | Berfungsi di browser, keputusan tersimpan di `localStorage` |
 | Pembatasan peran | Berfungsi untuk akun demo |
 
 ## Titik sambung backend
 
-- Simpan keputusan verifikasi dan persetujuan rute beserta pelaku dan waktunya.
+- Simpan keputusan verifikasi dan persetujuan rute beserta pelaku dan waktunya (tabel `route_decisions`, menggantikan `routeDecisions` di `src/lib/app-state.tsx`).
 - Terapkan pembatasan peran di sisi server (RLS), bukan hanya di tampilan.
 - Isi angka kunci dari database dan sumber data nyata (FIRMS, InaRISK).
 

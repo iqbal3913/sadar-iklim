@@ -77,7 +77,7 @@ export function RegionPicker() {
   const label = snapshot.region ? snapshot.region.village : "Pilih wilayah";
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="sm:relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -89,7 +89,7 @@ export function RegionPicker() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[min(20rem,calc(100vw-2rem))] space-y-3 rounded-xl bg-surface p-4 shadow-[var(--shadow-lift)] ring-1 ring-line">
+        <div className="thin-scroll absolute right-0 top-full mt-2 max-h-[calc(max(65vh,400px)-4.5rem)] w-[min(20rem,calc(100vw-4rem))] space-y-3 overflow-y-auto rounded-xl lg:max-h-[calc(100dvh-12rem)] bg-surface p-4 shadow-[var(--shadow-lift)] ring-1 ring-line">
           <p className="text-xs text-muted">Prakiraan cuaca dan peringatan dini BMKG akan mengikuti wilayah yang dipilih</p>
           {levels.map((name, i) => (
             <Field key={name} label={name}>

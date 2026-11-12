@@ -158,7 +158,7 @@ export function CampaignsPage() {
                       {l.qty} {l.unit}
                     </td>
                     <td className="py-2 pr-2 text-right tabular-nums">
-                      {l.unitCostIdr === null ? <Pill tone="neutral">cost_unknown</Pill> : idr.format(l.unitCostIdr)}
+                      {l.unitCostIdr === null ? <Pill tone="neutral">Belum ada harga</Pill> : idr.format(l.unitCostIdr)}
                     </td>
                     <td className="py-2 text-right tabular-nums">
                       {l.subtotal === null ? "—" : idr.format(l.subtotal)}

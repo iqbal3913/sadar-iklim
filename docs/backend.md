@@ -37,15 +37,15 @@ Paket gratisnya cukup untuk demo kompetisi. Proyek gratis dapat dijeda otomatis 
 | `report_reviews` | Laporan, petugas, keputusan, alasan, waktu | `overrides` di `app-state.tsx` |
 | `mangrove_audits` | Plot, bibit ditanam, bibit hidup, kondisi, risiko abrasi, status verifikasi, foto | State lokal halaman Mangrove |
 | `campaigns` | Judul, tautan, kategori, ringkasan, wilayah, status, verifikasi | `src/lib/mock/campaigns.ts` |
-| `route_decisions` | Rute, petugas, keputusan, waktu | Tombol rute di Command Center |
+| `route_decisions` | Rute, petugas, keputusan, waktu | `routeDecisions` di `app-state.tsx` |
 
 ## Aturan akses (RLS)
 
 | Siapa | Boleh |
 | --- | --- |
 | Pengunjung | Membaca laporan terverifikasi dan kampanye aktif |
-| Warga | Membuat laporan dan audit, membaca miliknya sendiri |
-| Petugas BPBD | Membaca semua laporan, menulis keputusan verifikasi dan persetujuan rute |
+| Warga | Membuat laporan dan audit, membaca miliknya sendiri, menarik laporannya yang belum diverifikasi, menghapus auditnya sendiri |
+| Petugas BPBD | Membaca semua laporan, menulis keputusan verifikasi dan persetujuan rute, menghapus laporan dan audit mana pun |
 
 Aturan ini harus berada di database, bukan hanya di tampilan.
 

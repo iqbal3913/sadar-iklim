@@ -160,9 +160,11 @@ export function NewReportForm() {
 
   return (
     <form onSubmit={submit} className="mx-auto grid max-w-5xl gap-5 lg:grid-cols-2" noValidate>
-      <div className="space-y-4">
+      <div className="space-y-4 lg:col-span-2">
         <h1 className="text-2xl font-bold">Buat laporan</h1>
         {mode === "SIMULATION" && <Notice tone="sim">Mode simulasi aktif. Laporan ini tersimpan sebagai simulasi</Notice>}
+      </div>
+      <div className="space-y-4">
         <Field label="Jenis laporan">
           <select value={type} onChange={(e) => setType(e.target.value as Report["type"])} className={inputCls}>
             <option value="flood_report">Banjir atau genangan</option>
@@ -193,7 +195,7 @@ export function NewReportForm() {
         </Button>
       </div>
 
-      <div className="space-y-4 lg:pt-12">
+      <div className="space-y-4">
         <Panel title="Foto">
           <div className="space-y-3">
             <label className="flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-line bg-canvas p-4 text-center hover:border-teal">
