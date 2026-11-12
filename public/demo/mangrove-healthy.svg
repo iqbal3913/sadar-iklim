@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" role="img" aria-label="Ilustrasi sintetis bibit mangrove sehat">
+<rect width="640" height="400" fill="#bcd8d4"/>
+<rect y="0" width="640" height="120" fill="#a8cbe0"/>
+<rect y="120" width="640" height="280" fill="#8e7a58"/>
+<rect y="300" width="640" height="100" fill="#6e5e44"/>
+<rect x="80" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="83" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="150" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="153" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="220" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="223" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="300" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="303" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="380" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="383" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="460" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="463" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="540" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="543" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="110" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="113" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="190" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="193" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="270" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="273" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="350" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="353" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="430" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="433" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="510" y="190" width="6" height="46" fill="#5b4a30"/><ellipse cx="513" cy="186" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="120" y="260" width="6" height="46" fill="#5b4a30"/><ellipse cx="123" cy="256" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="250" y="260" width="6" height="46" fill="#5b4a30"/><ellipse cx="253" cy="256" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="400" y="260" width="6" height="46" fill="#5b4a30"/><ellipse cx="403" cy="256" rx="22" ry="14" fill="#2f8f4e"/>
+<rect x="500" y="260" width="6" height="46" fill="#5b4a30"/><ellipse cx="503" cy="256" rx="22" ry="14" fill="#2f8f4e"/>
+<text x="16" y="384" font-family="sans-serif" font-size="14" fill="#fff">Ilustrasi sintetis untuk demo</text>
+</svg>
