@@ -13,3 +13,8 @@ export {
   apiError,
   apiSuccess,
 } from "./response";
+export {
+  type RateLimitBucket,
+  enforceRateLimit,
+  getHashedClientIdentifier,
+} from "./rate-limit";

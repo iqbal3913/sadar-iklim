@@ -140,3 +140,4 @@ Daftar semua sumber eksternal yang dipakai ada di [`docs/sumber-eksternal.md`](d
 Penjelasan tiap menu ada di folder [`docs/`](docs/README.md): Peta, Laporan, Mangrove, Kampanye, Command Center, dan Judge Mode.
 
 Dokumen lain: [panduan kerja tim dengan Git](CONTRIBUTING.md), [catatan untuk tim backend](docs/backend.md), [sumber eksternal](docs/sumber-eksternal.md), dan [filosofi logo](docs/logo.md).
+
