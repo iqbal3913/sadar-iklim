@@ -1,3 +1,4 @@
+// src/lib/data.ts
 import type {
   Conditions,
   Earthquake,
@@ -48,20 +49,51 @@ export interface Snapshot {
 }
 
 export interface LiveData {
-  forecast: { status: "LIVE" | "STALE"; fetchedAt: string; conditions: Conditions; center: LatLng; region: Region } | null;
-  earthquakes: { status: "LIVE" | "STALE"; fetchedAt: string; latest: Earthquake; felt: Earthquake[] } | null;
-  alerts: { status: "LIVE" | "STALE"; fetchedAt: string; items: WeatherAlert[] } | null;
+  forecast: {
+    status: "LIVE" | "STALE";
+    fetchedAt: string;
+    conditions: Conditions;
+    center: LatLng;
+    region: Region;
+  } | null;
+  earthquakes: {
+    status: "LIVE" | "STALE";
+    fetchedAt: string;
+    latest: Earthquake;
+    felt: Earthquake[];
+  } | null;
+  alerts: {
+    status: "LIVE" | "STALE";
+    fetchedAt: string;
+    items: WeatherAlert[];
+  } | null;
+  ibf?: {
+    status: "LIVE" | "STALE";
+    fetchedAt: string;
+    bulletin: IbfBulletin;
+  } | null;
+  routes?: RouteCandidate[] | null;
   errors: Partial<Record<"forecast" | "earthquakes" | "alerts", string>>;
   loading: boolean;
 }
 
-export const emptyLiveData: LiveData = { forecast: null, earthquakes: null, alerts: null, errors: {}, loading: true };
+export const emptyLiveData: LiveData = {
+  forecast: null,
+  earthquakes: null,
+  alerts: null,
+  ibf: null,
+  routes: null,
+  errors: {},
+  loading: true,
+};
 
 function distanceKm(a: LatLng, b: LatLng): number {
   const rad = Math.PI / 180;
   const dLat = (b[0] - a[0]) * rad;
   const dLon = (b[1] - a[1]) * rad;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLon / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLon / 2) ** 2;
   return 12742 * Math.asin(Math.sqrt(h));
 }
 
@@ -73,29 +105,61 @@ function sourceOf(
 ): SourceStatus {
   const part = live[key];
   if (part) return { key, label, status: part.status, updatedAt, note: null };
-  if (live.errors[key]) return { key, label, status: "ERROR", updatedAt: null, note: live.errors[key] ?? null };
+  if (live.errors[key])
+    return {
+      key,
+      label,
+      status: "ERROR",
+      updatedAt: null,
+      note: live.errors[key] ?? null,
+    };
   return { key, label, status: "LOADING", updatedAt: null, note: null };
 }
 
 export function mergeLive(base: Snapshot, live: LiveData): Snapshot {
   const center = live.forecast?.center ?? base.center;
   const near = <T extends { position: LatLng }>(items: T[]) =>
-    live.forecast ? items.filter((i) => distanceKm(i.position, center) <= 50) : items;
+    live.forecast
+      ? items.filter((i) => distanceKm(i.position, center) <= 50)
+      : items;
   return {
     ...base,
     center,
     conditions: live.forecast?.conditions ?? base.conditions,
+    bulletin: live.ibf?.bulletin ?? base.bulletin,
     region: live.forecast?.region ?? null,
     earthquake: live.earthquakes?.latest ?? null,
     alerts: live.alerts?.items ?? [],
     facilities: near(base.facilities),
     shelters: near(base.shelters),
     reports: near(base.reports),
+    routes: live.routes ?? base.routes,
     sources: [
-      sourceOf("forecast", "Prakiraan BMKG", live, live.forecast?.conditions.sourceUpdatedAt ?? null),
-      sourceOf("earthquakes", "Gempa BMKG", live, live.earthquakes?.latest.occurredAt ?? null),
-      sourceOf("alerts", "Peringatan dini BMKG", live, live.alerts?.fetchedAt ?? null),
-      { key: "sample", label: "Data lain", status: "SAMPLE", updatedAt: null, note: null },
+      sourceOf(
+        "forecast",
+        "Prakiraan BMKG",
+        live,
+        live.forecast?.conditions.sourceUpdatedAt ?? null,
+      ),
+      sourceOf(
+        "earthquakes",
+        "Gempa BMKG",
+        live,
+        live.earthquakes?.latest.occurredAt ?? null,
+      ),
+      sourceOf(
+        "alerts",
+        "Peringatan dini BMKG",
+        live,
+        live.alerts?.fetchedAt ?? null,
+      ),
+      {
+        key: "sample",
+        label: "Data lain",
+        status: "SAMPLE",
+        updatedAt: null,
+        note: null,
+      },
     ],
   };
 }
@@ -140,7 +204,15 @@ export function getScenarioSnapshot(code: string): Snapshot {
     earthquake: s.earthquake,
     windVector: s.windVector,
     alerts: [],
-    sources: [{ key: "sample", label: "Semua data pada skenario ini", status: "SIMULATION", updatedAt: null, note: null }],
+    sources: [
+      {
+        key: "sample",
+        label: "Semua data pada skenario ini",
+        status: "SIMULATION",
+        updatedAt: null,
+        note: null,
+      },
+    ],
     region: null,
   };
 }
