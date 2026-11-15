@@ -1,7 +1,6 @@
 // src/lib/cache/index.ts
 import "server-only";
 import { createHash } from "node:crypto";
-import type { FreshnessStatus } from "@/lib/api/response";
 import { classifyUpstreamError } from "@/lib/api/errors";
 
 export interface CacheEntry<T> {
@@ -18,7 +17,7 @@ export interface CacheEntry<T> {
 
 export interface CachedLoadResult<T> {
   status: "LIVE" | "STALE";
-  freshness: FreshnessStatus;
+  freshness: "FRESH" | "STALE";
   provider: string;
   fetchedAt: string;
   sourceUpdatedAt: string;
@@ -37,23 +36,20 @@ const memoryCache = new Map<string, CacheEntry<unknown>>();
 const circuitBreakers = new Map<string, CircuitState>();
 
 const CIRCUIT_FAILURE_THRESHOLD = 3;
-const CIRCUIT_COOLDOWN_MS = 60 * 1000; // 1 menit cooldown saat provider gagal beruntun
+const CIRCUIT_COOLDOWN_MS = 60 * 1000;
 
 export const CACHE_TTL_MS = {
-  BMKG_FORECAST: 30 * 60 * 1000, // 30 menit (PRD Bab 3.5)
-  BMKG_CAP_FEED: 3 * 60 * 1000, // 3 menit (PRD Bab 3.5)
-  BMKG_CAP_DETAIL: 3 * 60 * 1000, // 3 menit (PRD Bab 3.5)
-  BMKG_EARTHQUAKE: 2 * 60 * 1000, // 2 menit (PRD Bab 3.5)
-  OPEN_METEO_MARINE: 30 * 60 * 1000, // 30 menit (PRD Bab 3.5)
-  NASA_FIRMS: 15 * 60 * 1000, // 15 menit (PRD Bab 3.5)
-  INARISK_LAYER: 24 * 60 * 60 * 1000, // 24 jam (PRD Bab 3.5)
-  FACILITIES: 7 * 24 * 60 * 60 * 1000, // 7 hari (PRD Bab 3.5)
-  KITABISA_CATALOG: 12 * 60 * 60 * 1000, // 12 jam (PRD Bab 3.5)
+  BMKG_FORECAST: 30 * 60 * 1000,
+  BMKG_CAP_FEED: 3 * 60 * 1000,
+  BMKG_CAP_DETAIL: 3 * 60 * 1000,
+  BMKG_EARTHQUAKE: 2 * 60 * 1000,
+  OPEN_METEO_MARINE: 30 * 60 * 1000,
+  NASA_FIRMS: 15 * 60 * 1000,
+  INARISK_LAYER: 24 * 60 * 60 * 1000,
+  FACILITIES: 7 * 24 * 60 * 60 * 1000,
+  KITABISA_CATALOG: 12 * 60 * 60 * 1000,
 } as const;
 
-/**
- * Membentuk cache key standar berbasis provider dan wilayah/parameter (bukan per user).
- */
 export function buildSourceCacheKey(
   provider: string,
   regionOrScope: string,
@@ -95,11 +91,6 @@ function recordProviderFailure(provider: string): void {
   });
 }
 
-/**
- * Mengambil data dengan cache bersama per wilayah/sumber dan perlindungan circuit breaker.
- * Jika upstream gagal atau circuit sedang terbuka namun ada snapshot sebelumnya,
- * otomatis mengembalikan data terakhir dengan status `STALE` sesuai PRD Bab 3.5 & 8.1.2.
- */
 export async function withSourceCache<T>(options: {
   key: string;
   provider: string;
