@@ -59,18 +59,18 @@ type BasemapId = (typeof basemaps)[number]["id"];
 function BasemapControl({ value, onChange }: { value: BasemapId; onChange: (id: BasemapId) => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="absolute left-3 top-[100px] z-[600]">
+    <div className="absolute left-3 top-25 z-600">
       <button
         type="button"
         aria-label="Ganti peta dasar"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="grid size-9 place-items-center rounded-lg bg-surface text-ink-soft shadow-[var(--shadow-lift)] ring-1 ring-line transition-colors hover:bg-teal-soft hover:text-teal"
+        className="grid size-9 place-items-center rounded-lg bg-surface text-ink-soft shadow-(--shadow-lift) ring-1 ring-line transition-colors hover:bg-teal-soft hover:text-teal"
       >
         <MapIcon className="size-4" strokeWidth={2.25} aria-hidden />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-2 w-36 rounded-xl bg-surface p-1 shadow-[var(--shadow-lift)] ring-1 ring-line">
+        <div className="absolute left-0 top-full mt-2 w-36 rounded-xl bg-surface p-1 shadow-(--shadow-lift) ring-1 ring-line">
           {basemaps.map((b) => (
             <button
               key={b.id}
@@ -149,7 +149,7 @@ export default function MapView({
 
   return (
     <div className={sim ? "sim-watermark relative" : "relative"} style={{ height }}>
-      <div className="absolute left-3 top-3 z-[600] flex flex-col overflow-hidden rounded-lg bg-surface shadow-[var(--shadow-lift)] ring-1 ring-line">
+      <div className="absolute left-3 top-3 z-600 flex flex-col overflow-hidden rounded-lg bg-surface shadow-(--shadow-lift) ring-1 ring-line">
         <button
           type="button"
           aria-label="Perbesar peta"

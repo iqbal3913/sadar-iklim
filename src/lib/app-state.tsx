@@ -21,9 +21,9 @@ interface Persisted {
   adm4: string | null;
   user: DemoUser | null;
   addedReports: Report[];
-  overrides: Record<string, { status: ReportStatus; reviewNote: string }>;
+  overrides: Record<string, { status: ReportStatus; reviewNote: string; decidedAt: number }>;
   addedAudits: MangroveAudit[];
-  auditReviews: Record<string, MangroveAudit["verification"]>;
+  auditReviews: Record<string, { verification: MangroveAudit["verification"]; decidedAt: number }>;
   routeDecisions: Record<string, RouteDecision>;
   removed: string[];
 }
@@ -94,11 +94,36 @@ async function loadLive(adm4: string | null): Promise<LiveData> {
   };
 }
 
+const historyTtlMs = 7 * 24 * 60 * 60 * 1000;
+
+function purgeExpired(p: Persisted): Persisted {
+  const now = Date.now();
+  const expiredIds = [
+    ...Object.keys(p.overrides).filter((id) => now - p.overrides[id].decidedAt > historyTtlMs),
+    ...Object.keys(p.auditReviews).filter((id) => now - p.auditReviews[id].decidedAt > historyTtlMs),
+  ];
+  if (expiredIds.length === 0) return p;
+  const overrides = { ...p.overrides };
+  const auditReviews = { ...p.auditReviews };
+  expiredIds.forEach((id) => {
+    delete overrides[id];
+    delete auditReviews[id];
+  });
+  return {
+    ...p,
+    overrides,
+    auditReviews,
+    addedReports: p.addedReports.filter((r) => !expiredIds.includes(r.id)),
+    addedAudits: p.addedAudits.filter((a) => !expiredIds.includes(a.id)),
+    removed: [...new Set([...p.removed, ...expiredIds])],
+  };
+}
+
 function read(): Persisted {
   try {
     const raw = window.localStorage.getItem(storageKey);
     if (!raw) return defaults;
-    return { ...defaults, ...(JSON.parse(raw) as Partial<Persisted>) };
+    return purgeExpired({ ...defaults, ...(JSON.parse(raw) as Partial<Persisted>) });
   } catch {
     return defaults;
   }
@@ -149,7 +174,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
   const reviewReport = useCallback(
     (id: string, status: ReportStatus, reviewNote: string) =>
-      setState((s) => ({ ...s, overrides: { ...s.overrides, [id]: { status, reviewNote } } })),
+      setState((s) =>
+        s.overrides[id]
+          ? s
+          : { ...s, overrides: { ...s.overrides, [id]: { status, reviewNote, decidedAt: Date.now() } } },
+      ),
     [],
   );
   const removeItem = useCallback(
@@ -168,7 +197,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
   const reviewAudit = useCallback(
     (id: string, verification: MangroveAudit["verification"]) =>
-      setState((s) => ({ ...s, auditReviews: { ...s.auditReviews, [id]: verification } })),
+      setState((s) =>
+        s.auditReviews[id]
+          ? s
+          : { ...s, auditReviews: { ...s.auditReviews, [id]: { verification, decidedAt: Date.now() } } },
+      ),
     [],
   );
   const decideRoute = useCallback(
@@ -214,7 +247,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     () =>
       [...state.addedAudits, ...listMangroveAudits()]
         .filter((a) => !state.removed.includes(a.id))
-        .map((a) => ({ ...a, verification: state.auditReviews[a.id] ?? a.verification })),
+        .map((a) => ({ ...a, verification: state.auditReviews[a.id]?.verification ?? a.verification })),
     [state],
   );
 

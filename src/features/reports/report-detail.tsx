@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, CheckCircle2, Copy, Undo2, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Copy, XCircle } from "lucide-react";
 import { useAppState } from "@/lib/app-state";
 import { formatDateTime, statusLabel, urgencyLabel } from "@/lib/format";
 import { VisionResultCard } from "@/features/vision-triage/vision-result-card";
 import { ConfirmButton } from "@/components/confirm-button";
-import { Button, EmptyState, Field, Pill, Panel, inputCls } from "@/components/ui";
+import { Button, EmptyState, Field, Notice, Pill, Panel, inputCls } from "@/components/ui";
 
 const statusTone = {
   submitted: "neutral",
@@ -19,7 +19,7 @@ const statusTone = {
 } as const;
 
 export function ReportDetail({ id }: { id: string }) {
-  const { snapshot, user, reviewReport, removeItem, ready } = useAppState();
+  const { snapshot, user, reviewReport, removeItem, overrides, ready } = useAppState();
   const router = useRouter();
   const [note, setNote] = useState("");
   const [noteError, setNoteError] = useState<string | null>(null);
@@ -42,13 +42,17 @@ export function ReportDetail({ id }: { id: string }) {
   const pending = report.status === "needs_review" || report.status === "submitted";
   const isOwn = report.reporterMasked === "Anda";
   const canRemove = canReview || (isOwn && pending);
+  const decidedAt = overrides[report.id]?.decidedAt;
+  const daysLeft = decidedAt
+    ? Math.max(0, Math.ceil((decidedAt + 7 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000)))
+    : null;
 
   const remove = () => {
     removeItem(report.id);
     router.push("/reports");
   };
 
-  const act = (status: "verified" | "rejected" | "duplicate" | "needs_review") => {
+  const act = (status: "verified" | "rejected" | "duplicate") => {
     if (note.trim().length < 5) {
       setNoteError("Alasan wajib diisi, minimal 5 karakter");
       return;
@@ -101,6 +105,11 @@ export function ReportDetail({ id }: { id: string }) {
               </p>
             )}
           </Panel>
+          {daysLeft !== null && (
+            <Notice tone="info">
+              Keputusan petugas disimpan sebagai riwayat dan tidak dapat diubah. Laporan ini dihapus otomatis dalam {daysLeft} hari
+            </Notice>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -110,7 +119,7 @@ export function ReportDetail({ id }: { id: string }) {
             <EmptyState title="Belum ada hasil analisis" text="Foto belum dianalisis oleh AI" />
           )}
 
-          {canReview ? (
+          {canReview && pending ? (
             <Panel title="Keputusan petugas">
               <Field label="Alasan" hint="Perubahan status dicatat dalam jejak audit">
                 <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} className={inputCls} />
@@ -130,14 +139,17 @@ export function ReportDetail({ id }: { id: string }) {
                 <Button variant="secondary" onClick={() => act("duplicate")}>
                   <Copy className="size-4" aria-hidden /> Duplikat
                 </Button>
-                {!pending && (
-                  <Button variant="ghost" onClick={() => act("needs_review")}>
-                    <Undo2 className="size-4" aria-hidden /> Kembalikan ke antrean
-                  </Button>
-                )}
               </div>
             </Panel>
-          ) : (
+            ) : canReview ? (
+              <Panel title="Riwayat keputusan">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Pill tone={statusTone[report.status]}>{statusLabel[report.status]}</Pill>
+                  {decidedAt && <span className="text-xs text-muted">{formatDateTime(new Date(decidedAt).toISOString())}</span>}
+                </div>
+                {daysLeft !== null && <p className="mt-2 text-xs text-muted">Dihapus otomatis dalam {daysLeft} hari</p>}
+              </Panel>
+            ) : (
             <p className="rounded-lg bg-canvas p-3 text-sm text-muted">
               Verifikasi hanya dapat dilakukan oleh petugas BPBD
             </p>

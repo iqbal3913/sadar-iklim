@@ -6,7 +6,7 @@ import { Camera, MapPin, Plus } from "lucide-react";
 import { useAppState } from "@/lib/app-state";
 import { formatDateTime, statusLabel, urgencyLabel } from "@/lib/format";
 import type { ReportStatus } from "@/lib/types";
-import { Button, EmptyState, Pill, cx } from "@/components/ui";
+import { Button, EmptyState, Notice, Pill, cx } from "@/components/ui";
 
 const statusTone = {
   submitted: "neutral",
@@ -59,6 +59,10 @@ export function ReportList() {
           </button>
         ))}
       </div>
+
+      <Notice tone="info">
+        Laporan yang sudah diputuskan petugas disimpan sebagai riwayat selama 7 hari, lalu dihapus otomatis
+      </Notice>
 
       {reports.length === 0 ? (
         <EmptyState title="Belum ada laporan" text="Tidak ada laporan yang cocok dengan penyaring pada mode data ini" />

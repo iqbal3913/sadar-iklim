@@ -8,13 +8,13 @@ import { formatDateTime } from "@/lib/format";
 import type { SourceStatus } from "@/lib/types";
 import { cx } from "./ui";
 
-const statusStyle: Record<SourceStatus["status"], { dot: string; label: string }> = {
-  LIVE: { dot: "bg-live", label: "Live" },
-  STALE: { dot: "bg-stale", label: "Data terakhir" },
-  LOADING: { dot: "animate-pulse bg-muted", label: "Memuat" },
-  ERROR: { dot: "bg-danger", label: "Tidak terjangkau" },
-  SAMPLE: { dot: "bg-muted/60", label: "Contoh" },
-  SIMULATION: { dot: "bg-sim", label: "Simulasi" },
+const statusStyle: Record<SourceStatus["status"], { dot: string }> = {
+  LIVE: { dot: "bg-live" },
+  STALE: { dot: "bg-stale" },
+  LOADING: { dot: "animate-pulse bg-muted" },
+  ERROR: { dot: "bg-danger" },
+  SAMPLE: { dot: "bg-muted/60" },
+  SIMULATION: { dot: "bg-sim" },
 };
 
 function Clock() {
@@ -44,7 +44,7 @@ export function SourceBar() {
     const scenario = getScenario(scenarioCode);
     return (
       <div className="bg-sim text-navy">
-        <div className="mx-auto flex h-9 max-w-[1400px] items-center gap-4 px-4 text-xs">
+        <div className="mx-auto flex h-9 max-w-350 items-center gap-4 px-4 text-xs">
           <p className="flex min-w-0 items-center gap-2">
             <span className="size-1.5 shrink-0 rounded-full bg-navy" aria-hidden />
             <span className="truncate font-semibold">
@@ -69,23 +69,8 @@ export function SourceBar() {
 
   return (
     <div className="border-b border-line bg-surface">
-      <div className="mx-auto flex h-9 max-w-[1400px] items-center gap-5 px-4 text-xs">
-        <ul className="hidden min-w-0 items-center gap-5 xl:flex">
-          {snapshot.sources.map((s) => {
-            const st = statusStyle[s.status];
-            const tip = [st.label, s.updatedAt && `diperbarui ${formatDateTime(s.updatedAt)}`, s.note]
-              .filter(Boolean)
-              .join(", ");
-            return (
-              <li key={s.key} className="flex items-center gap-1.5 whitespace-nowrap" title={tip}>
-                <span className={cx("size-1.5 rounded-full", st.dot)} aria-hidden />
-                <span className="text-ink-soft">{s.label}</span>
-                <span className="text-muted">{st.label}</span>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="flex min-w-0 items-center gap-1.5 text-ink-soft xl:hidden">
+      <div className="mx-auto flex h-9 max-w-350 items-center gap-5 px-4 text-xs">
+        <p className="flex min-w-0 items-center gap-1.5 text-ink-soft">
           <span className={cx("size-1.5 shrink-0 rounded-full", summary.dot)} aria-hidden />
           <span className="truncate">{summary.text}</span>
         </p>
