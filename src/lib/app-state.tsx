@@ -1,6 +1,14 @@
+// src/lib/app-state.tsx
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type { DemoUser, MangroveAudit, Report, ReportStatus } from "./types";
 import {
   emptyLiveData,
@@ -56,7 +64,10 @@ interface AppState extends Persisted {
   reviewReport: (id: string, status: ReportStatus, note: string) => void;
   removeItem: (id: string) => void;
   addAudit: (audit: MangroveAudit) => void;
-  reviewAudit: (id: string, verification: MangroveAudit["verification"]) => void;
+  reviewAudit: (
+    id: string,
+    verification: MangroveAudit["verification"],
+  ) => void;
   decideRoute: (id: string, decision: RouteDecision | null) => void;
   resetDemo: () => void;
 }
@@ -72,23 +83,56 @@ async function getJson(url: string) {
   return body;
 }
 
+function buildAuthHeaders(user: DemoUser | null): HeadersInit {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (user?.email) {
+    headers["x-demo-user-email"] = user.email;
+  }
+  return headers;
+}
+
 async function loadLive(adm4: string | null): Promise<LiveData> {
   const errors: LiveData["errors"] = {};
   const fail = (key: keyof LiveData["errors"]) => (e: unknown) => {
-    errors[key] = e instanceof Error ? e.message : "Sumber tidak dapat dijangkau";
+    errors[key] =
+      e instanceof Error ? e.message : "Sumber tidak dapat dijangkau";
     return null;
   };
-  const [f, q] = await Promise.all([
-    getJson(adm4 ? `/api/bmkg/forecast?adm4=${encodeURIComponent(adm4)}` : "/api/bmkg/forecast").catch(fail("forecast")),
+
+  const forecastUrl = adm4
+    ? `/api/bmkg/forecast?adm4=${encodeURIComponent(adm4)}`
+    : "/api/bmkg/forecast";
+  const ibfUrl = adm4
+    ? `/api/ibf?adm4=${encodeURIComponent(adm4)}`
+    : "/api/ibf";
+
+  const [f, q, ibfRes, routesRes] = await Promise.all([
+    getJson(forecastUrl).catch(fail("forecast")),
     getJson("/api/bmkg/earthquakes").catch(fail("earthquakes")),
+    getJson(ibfUrl).catch(() => null),
+    getJson("/api/routes?mode=live").catch(() => null),
   ]);
-  const a = await getJson(`/api/bmkg/alerts?province=${encodeURIComponent(f?.data.region.province ?? "")}`).catch(
-    fail("alerts"),
-  );
+
+  const a = await getJson(
+    `/api/bmkg/alerts?province=${encodeURIComponent(f?.data.region.province ?? "")}`,
+  ).catch(fail("alerts"));
+
   return {
     forecast: f && { status: f.status, fetchedAt: f.fetchedAt, ...f.data },
     earthquakes: q && { status: q.status, fetchedAt: q.fetchedAt, ...q.data },
     alerts: a && { status: a.status, fetchedAt: a.fetchedAt, items: a.data },
+    ibf: ibfRes?.data?.bulletin
+      ? {
+          status: ibfRes.status === "STALE" ? "STALE" : "LIVE",
+          fetchedAt: ibfRes.fetchedAt,
+          bulletin: ibfRes.data.bulletin,
+        }
+      : null,
+    routes: Array.isArray(routesRes?.data?.routes)
+      ? routesRes.data.routes
+      : null,
     errors,
     loading: false,
   };
@@ -151,7 +195,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!ready || state.mode !== "LIVE") return;
     let active = true;
-    const run = () => loadLive(state.adm4).then((data) => active && setLive(data));
+    const run = () =>
+      loadLive(state.adm4).then((data) => active && setLive(data));
     run();
     const timer = window.setInterval(run, 5 * 60 * 1000);
     return () => {
@@ -160,63 +205,127 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
   }, [ready, state.mode, state.adm4]);
 
-  const setMode = useCallback((mode: Mode) => setState((s) => ({ ...s, mode })), []);
+  const setMode = useCallback(
+    (mode: Mode) => setState((s) => ({ ...s, mode })),
+    [],
+  );
   const setScenario = useCallback(
-    (scenarioCode: string) => setState((s) => ({ ...s, scenarioCode, mode: "SIMULATION" })),
+    (scenarioCode: string) =>
+      setState((s) => ({ ...s, scenarioCode, mode: "SIMULATION" })),
     [],
   );
-  const setAdm4 = useCallback((adm4: string | null) => setState((s) => ({ ...s, adm4 })), []);
-  const login = useCallback((user: DemoUser) => setState((s) => ({ ...s, user })), []);
-  const logout = useCallback(() => setState((s) => ({ ...s, user: null })), []);
-  const addReport = useCallback(
-    (report: Report) => setState((s) => ({ ...s, addedReports: [report, ...s.addedReports] })),
+  const setAdm4 = useCallback(
+    (adm4: string | null) => setState((s) => ({ ...s, adm4 })),
     [],
   );
+  const login = useCallback(
+    (user: DemoUser) => setState((s) => ({ ...s, user })),
+    [],
+  );
+  const logout = useCallback(
+    () => setState((s) => ({ ...s, user: null })),
+    [],
+  );
+
+  const addReport = useCallback((report: Report) => {
+    setState((s) => {
+      void fetch("/api/reports", {
+        method: "POST",
+        headers: buildAuthHeaders(s.user),
+        body: JSON.stringify({
+          title: report.title,
+          type: report.type,
+          description: report.description,
+          lat: report.position[0],
+          lng: report.position[1],
+          village: report.village,
+          observedAt: report.observedAt,
+          photo: report.photo,
+          dataMode: report.dataMode,
+          scenarioCode: s.mode === "SIMULATION" ? s.scenarioCode : null,
+        }),
+      }).catch(() => null);
+
+      return { ...s, addedReports: [report, ...s.addedReports] };
+    });
+  }, []);
+
   const reviewReport = useCallback(
     (id: string, status: ReportStatus, reviewNote: string) =>
-      setState((s) =>
-        s.overrides[id]
-          ? s
-          : { ...s, overrides: { ...s.overrides, [id]: { status, reviewNote, decidedAt: Date.now() } } },
-      ),
+      setState((s) => ({ ...s, overrides: { ...s.overrides, [id]: { status, reviewNote } } })),
     [],
   );
-  const removeItem = useCallback(
-    (id: string) =>
-      setState((s) => ({
+
+  const removeItem = useCallback((id: string) => {
+    setState((s) => {
+      void fetch(`/api/reports/${encodeURIComponent(id)}/review`, {
+        method: "DELETE",
+        headers: buildAuthHeaders(s.user),
+      }).catch(() => null);
+
+      return {
         ...s,
         addedReports: s.addedReports.filter((r) => r.id !== id),
         addedAudits: s.addedAudits.filter((a) => a.id !== id),
         removed: s.removed.includes(id) ? s.removed : [...s.removed, id],
-      })),
-    [],
-  );
-  const addAudit = useCallback(
-    (audit: MangroveAudit) => setState((s) => ({ ...s, addedAudits: [audit, ...s.addedAudits] })),
-    [],
-  );
+      };
+    });
+  }, []);
+
+  const addAudit = useCallback((audit: MangroveAudit) => {
+    setState((s) => {
+      void fetch("/api/mangrove", {
+        method: "POST",
+        headers: buildAuthHeaders(s.user),
+        body: JSON.stringify({
+          plotCode: audit.plotCode,
+          plotName: audit.plotName,
+          lat: audit.position[0],
+          lng: audit.position[1],
+          observedAt: audit.observedAt,
+          plantedCount: audit.plantedCount,
+          survivingCount: audit.survivingCount,
+          photo: audit.photo,
+          dataMode: s.mode === "SIMULATION" ? "simulation" : "live",
+        }),
+      }).catch(() => null);
+
+      return { ...s, addedAudits: [audit, ...s.addedAudits] };
+    });
+  }, []);
+
   const reviewAudit = useCallback(
     (id: string, verification: MangroveAudit["verification"]) =>
-      setState((s) =>
-        s.auditReviews[id]
-          ? s
-          : { ...s, auditReviews: { ...s.auditReviews, [id]: { verification, decidedAt: Date.now() } } },
-      ),
+      setState((s) => ({ ...s, auditReviews: { ...s.auditReviews, [id]: verification } })),
     [],
   );
+
   const decideRoute = useCallback(
-    (id: string, decision: RouteDecision | null) =>
+    (id: string, decision: RouteDecision | null) => {
       setState((s) => {
+        void fetch("/api/routes", {
+          method: "POST",
+          headers: buildAuthHeaders(s.user),
+          body: JSON.stringify({ routeId: id, decision }),
+        }).catch(() => null);
+
         const next = { ...s.routeDecisions };
         if (decision) next[id] = decision;
         else delete next[id];
         return { ...s, routeDecisions: next };
-      }),
+      });
+    },
     [],
   );
-  const resetDemo = useCallback(
-    () =>
-      setState((s) => ({
+
+  const resetDemo = useCallback(() => {
+    setState((s) => {
+      void fetch("/api/simulations", {
+        method: "POST",
+        headers: buildAuthHeaders(s.user),
+      }).catch(() => null);
+
+      return {
         ...s,
         addedReports: [],
         overrides: {},
@@ -225,13 +334,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         routeDecisions: {},
         removed: [],
         mode: "LIVE",
-      })),
-    [],
-  );
+      };
+    });
+  }, []);
 
   const snapshot = useMemo<Snapshot>(() => {
     const base =
-      state.mode === "LIVE" ? mergeLive(getLiveSnapshot(), live) : getScenarioSnapshot(state.scenarioCode);
+      state.mode === "LIVE"
+        ? mergeLive(getLiveSnapshot(), live)
+        : getScenarioSnapshot(state.scenarioCode);
     const modeKey = state.mode === "LIVE" ? "live" : "simulation";
     const added = state.addedReports.filter((r) => r.dataMode === modeKey);
     const reports = [...added, ...base.reports]
@@ -247,7 +358,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     () =>
       [...state.addedAudits, ...listMangroveAudits()]
         .filter((a) => !state.removed.includes(a.id))
-        .map((a) => ({ ...a, verification: state.auditReviews[a.id]?.verification ?? a.verification })),
+        .map((a) => ({ ...a, verification: state.auditReviews[a.id] ?? a.verification })),
     [state],
   );
 
