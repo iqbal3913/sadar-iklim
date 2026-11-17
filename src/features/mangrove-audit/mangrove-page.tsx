@@ -67,7 +67,7 @@ function AuditCard({
             {conditionLabel[audit.condition]}
           </Pill>
           <Pill tone="neutral">Abrasi {erosionLabel[audit.erosionRisk].toLowerCase()}</Pill>
-          <Pill tone={audit.verification === "verified" ? "ok" : "warn"}>
+          <Pill tone={audit.verification === "verified" ? "ok" : audit.verification === "rejected" ? "danger" : "warn"}>
             {audit.verification === "verified" ? "Terverifikasi" : audit.verification === "pending" ? "Menunggu" : "Ditolak"}
           </Pill>
         </div>
