@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ExternalIcon, Notice, Panel } from "@/components/ui";
+import { SourceStatusList } from "@/components/source-status-list";
 
 export const metadata: Metadata = { title: "Sumber data" };
 
@@ -37,6 +38,10 @@ export default function SourcesPage() {
         Prakiraan cuaca, gempabumi, dan peringatan dini sudah diambil langsung dari BMKG. Sumber lain di tabel ini masih rencana integrasi
       </Notice>
 
+      <Panel title="Status sumber saat ini">
+        <SourceStatusList />
+      </Panel>
+
       <Panel title="Arti label status">
         <ul className="grid gap-3 md:grid-cols-3">
           {labels.map((l) => (
@@ -50,7 +55,7 @@ export default function SourcesPage() {
 
       <Panel title="Daftar sumber">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-180 text-left text-sm">
             <thead>
               <tr className="border-b border-line text-xs text-muted">
                 <th scope="col" className="py-2 pr-3 font-medium">Sumber</th>

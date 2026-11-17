@@ -25,12 +25,14 @@ function AuditCard({
   audit,
   canReview,
   canRemove,
+  decidedAt,
   onReview,
   onRemove,
 }: {
   audit: MangroveAudit;
   canReview: boolean;
   canRemove: boolean;
+  decidedAt?: number;
   onReview: (verification: MangroveAudit["verification"]) => void;
   onRemove: () => void;
 }) {
@@ -83,17 +85,23 @@ function AuditCard({
           </ul>
         </div>
 
+        {decidedAt && (
+          <p className="text-xs text-muted">
+            Keputusan {formatDate(new Date(decidedAt).toISOString())}. Riwayat dihapus otomatis setelah 7 hari
+          </p>
+        )}
+
         {(canReview || canRemove) && (
           <div className="flex flex-wrap gap-2 border-t border-line pt-3">
-            {canReview && audit.verification !== "verified" && (
-              <Button onClick={() => onReview("verified")}>
-                <CheckCircle2 className="size-4" aria-hidden /> Verifikasi
-              </Button>
-            )}
-            {canReview && audit.verification !== "rejected" && (
-              <Button variant="secondary" onClick={() => onReview("rejected")}>
-                <XCircle className="size-4" aria-hidden /> Tolak
-              </Button>
+            {canReview && audit.verification === "pending" && (
+              <>
+                <Button onClick={() => onReview("verified")}>
+                  <CheckCircle2 className="size-4" aria-hidden /> Verifikasi
+                </Button>
+                <Button variant="secondary" onClick={() => onReview("rejected")}>
+                  <XCircle className="size-4" aria-hidden /> Tolak
+                </Button>
+              </>
             )}
             {canRemove && (
               <ConfirmButton
@@ -111,7 +119,7 @@ function AuditCard({
 }
 
 export function MangrovePage() {
-  const { audits, addedAudits, addAudit, reviewAudit, removeItem, user } = useAppState();
+  const { audits, addedAudits, auditReviews, addAudit, reviewAudit, removeItem, user } = useAppState();
   const isOfficer = user?.role === "bpbd_admin";
   const [open, setOpen] = useState(false);
   const mangroveSamples = listSamplePhotos().filter((s) => s.kind === "mangrove_audit");
@@ -180,13 +188,13 @@ export function MangrovePage() {
               <input value={plotCode} onChange={(e) => setPlotCode(e.target.value)} className={inputCls} placeholder="PLT-BKL-003" />
             </Field>
             <Field label="Nama plot">
-              <input value={plotName} onChange={(e) => setPlotName(e.target.value)} className={inputCls} />
+              <input value={plotName} onChange={(e) => setPlotName(e.target.value)} className={inputCls} placeholder="Plot Muara Selatan" />
             </Field>
             <Field label="Bibit ditanam" hint="Pembagi survival rate">
-              <input inputMode="numeric" value={planted} onChange={(e) => setPlanted(e.target.value)} className={inputCls} />
+              <input inputMode="numeric" value={planted} onChange={(e) => setPlanted(e.target.value)} className={inputCls} placeholder="200" />
             </Field>
             <Field label="Bibit hidup (hitungan lapangan)">
-              <input inputMode="numeric" value={surviving} onChange={(e) => setSurviving(e.target.value)} className={inputCls} />
+              <input inputMode="numeric" value={surviving} onChange={(e) => setSurviving(e.target.value)} className={inputCls} placeholder="150" />
             </Field>
             <div className="md:col-span-2">
               <p className="text-sm font-medium">Foto contoh</p>
@@ -233,6 +241,7 @@ export function MangrovePage() {
             audit={a}
             canReview={isOfficer}
             canRemove={isOfficer || addedAudits.some((x) => x.id === a.id)}
+            decidedAt={auditReviews[a.id]?.decidedAt}
             onReview={(v) => reviewAudit(a.id, v)}
             onRemove={() => removeItem(a.id)}
           />
