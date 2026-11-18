@@ -18,7 +18,7 @@ const generic: VisionResult = {
     "Memerlukan verifikasi dari petugas BPBD",
   ],
   integrity: "inconclusive",
-  nextAction: "Perlu pemeriksaan petugas",
+  nextAction: "Perlu pemeriksaan dari petugas",
   reviewRequired: true,
 };
 
