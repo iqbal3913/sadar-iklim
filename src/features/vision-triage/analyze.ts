@@ -9,7 +9,7 @@ const generic: VisionResult = {
   waterDepthCm: null,
   depthBasis: "no_reliable_reference",
   observations: [
-    "Foto diterima untuk diperiksa",
+    "Foto telah diterima untuk diperiksa",
     "Analisis otomatis membutuhkan pemeriksaan lanjutan oleh petugas",
   ],
   hazards: [],
