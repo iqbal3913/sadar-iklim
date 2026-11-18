@@ -15,7 +15,7 @@ const generic: VisionResult = {
   hazards: [],
   limitations: [
     "Kedalaman air tidak dapat diperkirakan tanpa pembanding ukuran yang jelas",
-    "Memerlukan verifikasi petugas BPBD",
+    "Memerlukan verifikasi dari petugas BPBD",
   ],
   integrity: "inconclusive",
   nextAction: "Perlu pemeriksaan petugas",
