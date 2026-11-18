@@ -9,16 +9,16 @@ const generic: VisionResult = {
   waterDepthCm: null,
   depthBasis: "no_reliable_reference",
   observations: [
-    "Foto diterima untuk diperiksa",
+    "Foto telah diterima untuk diperiksa",
     "Analisis otomatis membutuhkan pemeriksaan lanjutan oleh petugas",
   ],
   hazards: [],
   limitations: [
     "Kedalaman air tidak dapat diperkirakan tanpa pembanding ukuran yang jelas",
-    "Memerlukan verifikasi petugas BPBD",
+    "Memerlukan verifikasi dari petugas BPBD",
   ],
   integrity: "inconclusive",
-  nextAction: "Perlu pemeriksaan petugas",
+  nextAction: "Perlu pemeriksaan dari petugas",
   reviewRequired: true,
 };
 
