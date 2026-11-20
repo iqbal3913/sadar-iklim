@@ -252,7 +252,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const reviewReport = useCallback(
     (id: string, status: ReportStatus, reviewNote: string) =>
-      setState((s) => ({ ...s, overrides: { ...s.overrides, [id]: { status, reviewNote } } })),
+      setState((s) =>
+        s.overrides[id]
+          ? s
+          : { ...s, overrides: { ...s.overrides, [id]: { status, reviewNote, decidedAt: Date.now() } } },
+      ),
     [],
   );
 
@@ -296,7 +300,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const reviewAudit = useCallback(
     (id: string, verification: MangroveAudit["verification"]) =>
-      setState((s) => ({ ...s, auditReviews: { ...s.auditReviews, [id]: verification } })),
+      setState((s) =>
+        s.auditReviews[id]
+          ? s
+          : { ...s, auditReviews: { ...s.auditReviews, [id]: { verification, decidedAt: Date.now() } } },
+      ),
     [],
   );
 
@@ -358,10 +366,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     () =>
       [...state.addedAudits, ...listMangroveAudits()]
         .filter((a) => !state.removed.includes(a.id))
-        .map((a) => ({ ...a, verification: state.auditReviews[a.id] ?? a.verification })),
+        .map((a) => ({ ...a, verification: state.auditReviews[a.id]?.verification ?? a.verification })),
     [state],
   );
-
+  
   const value = useMemo<AppState>(
     () => ({
       ...state,
